@@ -160,6 +160,8 @@ class BackgroundServer:
             port=self.port,
             log_level=self.settings.log_level.lower(),
             access_log=False,
+            use_colors=False,
+            log_config=None,
         )
         self._server = uvicorn.Server(config)
         self._server.install_signal_handlers = lambda: None

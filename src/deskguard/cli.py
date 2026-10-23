@@ -393,7 +393,14 @@ def _command_serve(args: argparse.Namespace, settings: Settings) -> int:
             1.5, lambda: webbrowser.open(f"http://{host}:{port}/")
         ).start()
 
-    uvicorn.run(app, host=host, port=port, log_level=settings.log_level.lower())
+    uvicorn.run(
+        app,
+        host=host,
+        port=port,
+        log_level=settings.log_level.lower(),
+        use_colors=False,
+        log_config=None,
+    )
     return 0
 
 
