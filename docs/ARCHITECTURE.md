@@ -113,7 +113,7 @@ consomem `ProcedureSpec.to_dict()`. Não há metadado duplicado.
 
 ### Como adicionar um procedimento
 
-1. Crie `src/deskguard/procedures/meu_procedimento.py`.
+1. Crie `src/deskguard/procedures/meu_procedimento.py`. Como exemplo recente, `ad.self_status` lê a conta do usuário logado sem credenciais, usando `$env:USERNAME` e `Get-ADUser`, além de `Test-ComputerSecureChannel`.
 2. Declare `spec` com id, título, categoria, risco, pré-requisitos, passos e
    parâmetros.
 3. Implemente `build_collectors()`.

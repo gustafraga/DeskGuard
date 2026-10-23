@@ -204,6 +204,13 @@ funciona no `.exe` sem instalação adicional.
    severidade e deixa itens inconclusivos quando não há privilégio ou quando
    o componente não está disponível. A aprovação das verificações **não**
    equivale a uma certificação de segurança.
+11. **Diagnóstico AD sem credenciais.** O procedimento `ad.self_status` é
+    estritamente somente leitura: consulta a conta pelo `$env:USERNAME` com
+    `Get-ADUser` e executa `Test-ComputerSecureChannel -Verbose`. Não solicita
+    credenciais, não altera a conta e não repara a confiança do domínio —
+    apenas alerta quando a confiança está quebrada, indicando que o reparo
+    exige privilégios de administrador. API, CLI, catálogo e Dashboard são
+    atualizados para exibir "Minha Conta" e "Confiança do Domínio".
 
 
 ---

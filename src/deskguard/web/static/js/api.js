@@ -51,6 +51,7 @@ async function request(path, options = {}) {
 export const api = {
   health: () => request('/api/health'),
   dashboard: () => request('/api/dashboard'),
+  adSelfStatus: () => request('/api/ad/self-status'),
   settings: () => request('/api/settings'),
   procedures: () => request('/api/procedures'),
   procedure: (id) => request(`/api/procedures/${encodeURIComponent(id)}`),

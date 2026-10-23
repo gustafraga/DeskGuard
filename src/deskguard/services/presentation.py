@@ -92,6 +92,8 @@ _TITLES: dict[str, str] = {
     "guest_account": "Conta de convidado",
     "caption": "Descrição",
     "security": "Segurança",
+    "account": "Conta do usuário logado",
+    "domain_trust": "Confiança do domínio",
 }
 
 _COLUMNS: dict[str, str] = {
@@ -134,6 +136,18 @@ _COLUMNS: dict[str, str] = {
     "mac_address": "Endereço MAC",
     "registered_at": "Registrado em",
     "product_state": "Estado bruto",
+    "username": "Usuário",
+    "user_domain": "Domínio do usuário",
+    "enabled": "Conta habilitada",
+    "locked_out": "Conta bloqueada",
+    "password_expired": "Senha expirada",
+    "account_expiration_date": "Expiração da conta",
+    "last_logon_date": "Último logon",
+    "days_until_expiration": "Dias para expirar",
+    "account_expired": "Conta expirada",
+    "checked": "Verificação executada",
+    "ok": "Confiança OK",
+    "domain": "Domínio",
 }
 
 # Limite de colunas em tabelas genéricas: evita transformar evidências

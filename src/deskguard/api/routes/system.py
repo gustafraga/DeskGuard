@@ -14,6 +14,7 @@ from deskguard.collectors.python_stdlib import is_admin
 from deskguard.config import Settings
 from deskguard.desktop import desktop_availability
 from deskguard.domain.enums import AuditAction
+from deskguard.procedures.ad_self_status import collect_self_status_summary
 from deskguard.security.allowlist import allowlist_path_for, load_allowlist
 from deskguard.storage import repository
 from deskguard.storage.database import Database
@@ -47,6 +48,16 @@ def dashboard(db: Database = Depends(get_database)) -> dict:
         stats = repository.dashboard_stats(session)
     stats["generated_at"] = repository.utcnow().isoformat()
     return stats
+
+
+@router.get("/ad/self-status")
+def ad_self_status(settings: Settings = Depends(get_settings)) -> dict:
+    """Conta do usuário logado e confiança do domínio para o Dashboard.
+
+    A consulta usa o contexto de segurança do próprio técnico: nenhuma
+    credencial adicional é recebida pela API nem repassada ao PowerShell.
+    """
+    return collect_self_status_summary(timeout_s=settings.request_timeout_s)
 
 
 @router.get("/settings")

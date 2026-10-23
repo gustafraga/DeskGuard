@@ -150,6 +150,21 @@ export async function renderDashboard(root) {
   ]);
   root.append(kpis);
 
+  let selfStatus = null;
+  let selfStatusError = null;
+  try {
+    selfStatus = await api.adSelfStatus();
+  } catch (error) {
+    selfStatusError = error.message;
+  }
+
+  root.append(
+    h('div', { class: 'detail-grid' }, [
+      card('Minha Conta', renderSelfAccount(selfStatus, selfStatusError)),
+      card('Confiança do Domínio', renderDomainTrust(selfStatus, selfStatusError)),
+    ]),
+  );
+
   const bySeverity = Object.entries(stats.by_severity || {});
   const severityRows = bySeverity.length
     ? h('table', {}, [
@@ -228,6 +243,68 @@ function kpi(label, value, hint, tone) {
     h('div', { class: 'kpi-label', text: label }),
     h('div', { class: 'kpi-value', text: String(value ?? 0) }),
     hint ? h('div', { class: 'kpi-hint', text: hint }) : null,
+  ]);
+}
+  if (status === 'pass') return 'ok';
+  if (status === 'warn') return 'warn';
+  if (status === 'fail') return 'fail';
+  return 'unknown';
+}
+
+function renderSelfAccount(selfStatus, error) {
+  if (error) {
+    return emptyState(`Não foi possível carregar o diagnóstico AD: ${error}`);
+  }
+  if (!selfStatus) {
+    return h('p', { class: 'loading', text: 'Carregando diagnóstico da conta...' });
+  }
+  const account = selfStatus.account || {};
+  const username = account.username || selfStatus.username || '—';
+  const domain = account.user_domain || '—';
+  const enabled = account.enabled === true ? 'Ativa' : account.enabled === false ? 'Desabilitada' : 'Não verificado';
+  const locked = account.locked_out === true ? 'Bloqueada' : account.locked_out === false ? 'Desbloqueada' : 'Não verificado';
+  const password = account.password_expired === true ? 'Expirada' : account.password_expired === false ? 'Válida' : 'Não verificado';
+  let expiration = 'Sem expiração definida';
+  if (account.account_expiration_date) {
+    expiration = account.account_expiration_date;
+    if (account.days_until_expiration !== null && account.days_until_expiration !== undefined) {
+      expiration = `${account.account_expiration_date} (${account.days_until_expiration} dia(s) para expirar)`;
+    }
+    if (account.days_until_expiration !== null && account.days_until_expiration < 0) {
+      expiration = `${account.account_expiration_date} (expirada)`;
+    }
+  }
+  return definitionList([
+    ['Usuário', username],
+    ['Domínio', domain],
+    ['Status', h('span', { class: `badge ${adStatusTone(account.status)}`, text: enabled })],
+    ['Bloqueio', locked],
+    ['Senha', password],
+    ['Expiração da conta', expiration],
+    ['Último logon', account.last_logon_date || '—'],
+    ['Mensagem', account.message || '—'],
+  ]);
+}
+
+function renderDomainTrust(selfStatus, error) {
+  if (error) {
+    return emptyState(`Não foi possível carregar o diagnóstico AD: ${error}`);
+  }
+  if (!selfStatus) {
+    return h('p', { class: 'loading', text: 'Carregando confiança do domínio...' });
+  }
+  const trust = selfStatus.domain_trust || {};
+  let label = 'Não verificado';
+  if (trust.status === 'pass') label = 'OK';
+  else if (trust.status === 'warn') label = 'Alerta';
+  else if (trust.status === 'fail') label = 'Falha';
+  else if (trust.status === 'inconclusive') label = 'Inconclusivo';
+  return definitionList([
+    ['Situação', h('span', { class: `badge ${adStatusTone(trust.status)}`, text: label })],
+    ['Domínio verificado', trust.domain || '—'],
+    ['Test-ComputerSecureChannel', trust.ok === true ? 'True' : trust.ok === false ? 'False' : '—'],
+    ['Mensagem', trust.message || '—'],
+    ['Reparo', trust.status === 'warn' ? 'Exige privilégios de administrador' : '—'],
   ]);
 }
 
@@ -1002,6 +1079,69 @@ export async function renderSettings(root) {
 }
 
 
+function adStatusTone(status) {
+  if (status === 'pass') return 'ok';
+  if (status === 'warn') return 'warn';
+  if (status === 'fail') return 'fail';
+  return 'unknown';
+}
+
+function renderSelfAccount(selfStatus, error) {
+  if (error) {
+    return emptyState(`Não foi possível carregar o diagnóstico AD: ${error}`);
+  }
+  if (!selfStatus) {
+    return h('p', { class: 'loading', text: 'Carregando diagnóstico da conta...' });
+  }
+  const account = selfStatus.account || {};
+  const username = account.username || selfStatus.username || '—';
+  const domain = account.user_domain || '—';
+  const enabled = account.enabled === true ? 'Ativa' : account.enabled === false ? 'Desabilitada' : 'Não verificado';
+  const locked = account.locked_out === true ? 'Bloqueada' : account.locked_out === false ? 'Desbloqueada' : 'Não verificado';
+  const password = account.password_expired === true ? 'Expirada' : account.password_expired === false ? 'Válida' : 'Não verificado';
+  let expiration = 'Sem expiração definida';
+  if (account.account_expiration_date) {
+    expiration = account.account_expiration_date;
+    if (account.days_until_expiration !== null && account.days_until_expiration !== undefined) {
+      expiration = `${account.account_expiration_date} (${account.days_until_expiration} dia(s) para expirar)`;
+    }
+    if (account.days_until_expiration !== null && account.days_until_expiration < 0) {
+      expiration = `${account.account_expiration_date} (expirada)`;
+    }
+  }
+  return definitionList([
+    ['Usuário', username],
+    ['Domínio', domain],
+    ['Status', h('span', { class: `badge ${adStatusTone(account.status)}`, text: enabled })],
+    ['Bloqueio', locked],
+    ['Senha', password],
+    ['Expiração da conta', expiration],
+    ['Último logon', account.last_logon_date || '—'],
+    ['Mensagem', account.message || '—'],
+  ]);
+}
+
+function renderDomainTrust(selfStatus, error) {
+  if (error) {
+    return emptyState(`Não foi possível carregar o diagnóstico AD: ${error}`);
+  }
+  if (!selfStatus) {
+    return h('p', { class: 'loading', text: 'Carregando confiança do domínio...' });
+  }
+  const trust = selfStatus.domain_trust || {};
+  let label = 'Não verificado';
+  if (trust.status === 'pass') label = 'OK';
+  else if (trust.status === 'warn') label = 'Alerta';
+  else if (trust.status === 'fail') label = 'Falha';
+  else if (trust.status === 'inconclusive') label = 'Inconclusivo';
+  return definitionList([
+    ['Situação', h('span', { class: `badge ${adStatusTone(trust.status)}`, text: label })],
+    ['Domínio verificado', trust.domain || '—'],
+    ['Test-ComputerSecureChannel', trust.ok === true ? 'True' : trust.ok === false ? 'False' : '—'],
+    ['Mensagem', trust.message || '—'],
+    ['Reparo', trust.status === 'warn' ? 'Exige privilégios de administrador' : '—'],
+  ]);
+}
 // --------------------------------------------------------------------------
 // Módulo G - Auto-Remediação
 // --------------------------------------------------------------------------

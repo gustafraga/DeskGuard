@@ -290,6 +290,95 @@ def test_painel_calcula_indicadores(client: TestClient, csrf: str) -> None:
     assert "by_outcome" in payload
 
 
+def test_catalogo_inclui_o_diagnostico_de_active_directory(
+    client: TestClient,
+) -> None:
+    response = client.get("/api/procedures")
+    assert response.status_code == 200
+    procedural = {item["id"]: item for item in response.json()["procedures"]}
+    assert "ad.self_status" in procedural
+    assert procedural["ad.self_status"]["read_only"] is True
+    assert procedural["ad.self_status"]["privilege"] == "user"
+
+
+def test_rota_do_dashboard_expoe_conta_e_confianca_do_dominio(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from deskguard.api.routes import system
+
+    payload = {
+        "generated_at": "2026-10-23T12:00:00+00:00",
+        "mode": "live",
+        "username": "tecnico.exemplo",
+        "account": {
+            "username": "tecnico.exemplo",
+            "user_domain": "EMPRESA",
+            "status": "pass",
+            "severity": "info",
+            "message": "Conta ativa, desbloqueada e com senha válida.",
+            "enabled": True,
+            "locked_out": False,
+            "password_expired": False,
+            "account_expiration_date": "2026-12-31T00:00:00",
+            "days_until_expiration": 69,
+            "last_logon_date": "2026-10-23T09:15:00",
+        },
+        "domain_trust": {
+            "status": "warn",
+            "severity": "high",
+            "message": (
+                "A confiança do computador com o domínio está quebrada. "
+                "O reparo exige privilégios de administrador."
+            ),
+            "checked": True,
+            "ok": False,
+            "domain": "empresa.local",
+        },
+    }
+    monkeypatch.setattr(
+        system, "collect_self_status_summary", lambda **_: payload
+    )
+
+    response = client.get("/api/ad/self-status")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["account"]["enabled"] is True
+    assert body["account"]["days_until_expiration"] == 69
+    assert body["domain_trust"]["status"] == "warn"
+    assert body["domain_trust"]["ok"] is False
+
+
+def test_dashboard_renderiza_cards_minha_conta_e_confianca(
+    client: TestClient,
+) -> None:
+    response = client.get("/static/js/views.js")
+    assert response.status_code == 200
+    script = response.text
+    assert "Minha Conta" in script
+    assert "Confiança do Domínio" in script
+    assert "adSelfStatus" in script
+
+
+def test_execucao_de_ad_self_status_em_modo_demonstracao(
+    client: TestClient, csrf: str
+) -> None:
+    response = client.post(
+        "/api/executions",
+        json={"procedure_id": "ad.self_status", "params": {}, "mode": "demo"},
+        headers={"X-DeskGuard-CSRF": csrf},
+    )
+    assert response.status_code == 202
+    payload = _aguardar(client, response.json()["execution_id"])
+
+    assert payload["status"] == "completed"
+    assert {step["check_id"] for step in payload["steps"]} == {
+        "ad.account",
+        "ad.domain_trust",
+    }
+    assert all(step["simulated"] is True for step in payload["steps"])
+
+
 def test_auditoria_registra_a_execucao(client: TestClient, csrf: str) -> None:
     response = client.post(
         "/api/executions",

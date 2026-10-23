@@ -755,3 +755,55 @@ def build_demo_security_audit() -> list[Collector]:
             fn=demo_security,
         )
     ]
+
+
+def build_demo_ad_self_status() -> list[Collector]:
+    """Coletores simulados do procedimento ``ad.self_status``."""
+
+    def demo_ad(ctx: ProbeContext) -> list[CheckResult]:
+        account = {
+            "simulated": True,
+            "notice": _DEMO_MARK,
+            "username": "tecnico.exemplo",
+            "user_domain": "EMPRESA",
+            "available": True,
+            "enabled": True,
+            "locked_out": False,
+            "password_expired": False,
+            "account_expiration_date": "2026-12-31T00:00:00",
+            "last_logon_date": "2026-10-23T09:15:00",
+            "error": "",
+        }
+        trust = {
+            "simulated": True,
+            "notice": _DEMO_MARK,
+            "checked": True,
+            "trust_ok": True,
+            "domain": "empresa.local (exemplo)",
+            "error": "",
+        }
+        return [
+            CheckResult.ok(
+                "ad.account",
+                "Conta do usuário logado",
+                "Coleta simulada concluída.",
+                evidence=account,
+                simulated=True,
+            ),
+            CheckResult.ok(
+                "ad.domain_trust",
+                "Confiança do domínio",
+                "Coleta simulada concluída.",
+                evidence=trust,
+                simulated=True,
+            ),
+        ]
+
+    return [
+        Collector(
+            check_id="ad.self_status",
+            title="Active Directory do usuário logado (simulado)",
+            description="Conta e confiança do domínio simuladas para demonstração.",
+            fn=demo_ad,
+        )
+    ]

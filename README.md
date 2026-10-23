@@ -11,9 +11,9 @@ O DeskGuard é uma plataforma **local e defensiva** para acelerar o primeiro ate
 - **Sem adivinhação:** Coleta **somente leitura** com dados reais do Windows (PowerShell, WMI/CIM), evitando alterações acidentais no equipamento.
 - **Segurança e governança:** Lista de destinos autorizados para testes de rede, sem shell dinâmico, validação estrita de parâmetros e trilha de auditoria.
 - **Funciona onde precisa:** Roda 100% local (sem SaaS), em **janela nativa do Windows** ou via navegador, e pode ser distribuído como **executável único** (`DeskGuard.exe`).
-- **Confiável:** Suíte automatizada com 274 testes garantindo estabilidade entre versões.
+- **Confiável:** Suíte automatizada com 307 testes garantindo estabilidade entre versões.
 
-**Estado atual:** MVP Fase 1 concluído + **Fase 2 iniciada** — **seis** procedimentos reais de diagnóstico (somente leitura), gerador de relatório com visão em 3 níveis (resumo N1, tabelas técnicas N2/N3 e JSON bruto recolhido em bloco retrátil), histórico, auditoria, **Módulo G - Auto-Remediação** (reiniciar Print Spooler com confirmação obrigatória), interface web, janela nativa, instalador Inno Setup e GitHub Actions para Releases. Suíte automatizada com **276 testes**. Desde a versão **0.2.0** a plataforma também roda em **janela nativa do Windows** (sem navegador) e é distribuída como **executável único** (`DeskGuard.exe`) ou via instalador. Ao abrir o executável sem argumentos, ele assume automaticamente o comando `desktop`.
+**Estado atual:** MVP Fase 1 concluído + **Fase 2 iniciada** — **sete** procedimentos reais de diagnóstico (somente leitura), incluindo **diagnóstico de Active Directory do usuário logado sem credenciais extras**, gerador de relatório com visão em 3 níveis (resumo N1, tabelas técnicas N2/N3 e JSON bruto recolhido em bloco retrátil), histórico, auditoria, **Módulo G - Auto-Remediação** (reiniciar Print Spooler com confirmação obrigatória), interface web, janela nativa, instalador Inno Setup e GitHub Actions para Releases. Suíte automatizada com **307 testes**. Desde a versão **0.2.0** a plataforma também roda em **janela nativa do Windows** (sem navegador) e é distribuída como **executável único** (`DeskGuard.exe`) ou via instalador. Ao abrir o executável sem argumentos, ele assume automaticamente o comando `desktop`.
 
 ---
 
@@ -418,6 +418,39 @@ Cada serviço tem um perfil com o impacto no atendimento — por exemplo, o
 Spooler parado derruba a impressão, e o cliente DNS parado derruba a
 resolução de nomes mesmo com o cabo conectado.
 
+### `ad.self_status` — Active Directory do usuário logado
+
+Diagnóstico focado na conta de quem executa o DeskGuard, em duas verificações:
+
+| # | Verificação | O que obtém |
+|---|---|---|
+| 1 | Conta do usuário logado | `Enabled`, `LockedOut`, `PasswordExpired`, `AccountExpirationDate` e `LastLogonDate` |
+| 2 | Confiança do domínio | Resultado de `Test-ComputerSecureChannel -Verbose` |
+
+O procedimento usa **somente o contexto de segurança do próprio técnico**:
+não pede senha, token, credencial de administrador nem elevação. O login é
+obtido de `$env:USERNAME` e consultado com o módulo `ActiveDirectory`
+(`Get-ADUser -Identity $env:USERNAME`). Se o módulo RSAT não estiver instalado
+ou a conta não puder ser lida, o resultado fica **inconclusivo** — nunca uma
+falha inventada.
+
+A conta é considerada aprovada quando está habilitada, desbloqueada, com senha
+válida e sem data de expiração vencida. Conta bloqueada, desabilitada, senha
+expirada ou conta vencida são **desvios confirmados**, com recomendação para o
+administrador do domínio.
+
+Quando `Test-ComputerSecureChannel` retorna `True`, a confiança do computador
+com o domínio aparece como **OK**. Quando retorna `False`, o DeskGuard registra
+um **alerta de confiança quebrada** e informa que o reparo exige **privilégios
+de administrador** — o DeskGuard não executa esse reparo.
+
+O Dashboard exibe dois cards alimentados por esse diagnóstico:
+
+| Card | Conteúdo |
+|---|---|
+| **Minha Conta** | Usuário, status ativo/desabilitado, bloqueio, senha expirada, dias para expirar a conta e último logon |
+| **Confiança do Domínio** | **OK** ou **Alerta**, com a mensagem e a indicação de reparo administrativo |
+
 ---
 
 ## 6. Modelo de resultado
@@ -484,10 +517,10 @@ Detalhamento em [docs/SECURITY.md](docs/SECURITY.md).
 python -m pytest -q
 ```
 
-**Resultado real desta execução (22/10/2026):**
+**Resultado real desta execução (23/10/2026):**
 
 ```
-225 passed, 1 warning in 16.59s
+307 passed, 1 warning in 12.44s
 ```
 
 Com cobertura:
@@ -497,8 +530,8 @@ python -m pytest -q --cov=deskguard --cov-report=term-missing
 ```
 
 ```
-TOTAL                                           2824    387    86%
-225 passed, 1 warning in 16.59s
+TOTAL                                           3606    496    86%
+307 passed, 1 warning in 14.78s
 ```
 
 | Área | Cobertura |

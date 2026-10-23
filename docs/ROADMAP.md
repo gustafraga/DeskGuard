@@ -23,12 +23,12 @@ quando apenas os arquivos existem.
 | Procedimento real `system.overview` | ✅ |
 | Modo demonstração separado do real | ✅ |
 | CLI (`serve`, `list`, `run`, `doctor`) | ✅ |
-| Suíte de testes | ✅ 81 testes, 79% de cobertura (no fechamento do incremento 1; hoje são 225 testes e 86%) |
+| Suíte de testes | ✅ 81 testes, 79% de cobertura (no fechamento do incremento 1; hoje são 307 testes e 86%) |
 
 **Critérios de conclusão verificados**
 
 - [x] `python -m deskguard run system.overview` coleta dados reais do host.
-- [x] `python -m pytest -q` → suíte completa passando (274 testes no estado atual).
+- [x] `python -m pytest -q` → suíte completa passando (307 testes no estado atual).
 - [x] A API recusa requisição sem token anti-CSRF (403) e com `Host` externo (403).
 - [x] O relatório identifica a origem dos dados (real × simulado).
 - [x] Uma exceção em coletor vira `inconclusive`, nunca `fail`.
@@ -86,7 +86,7 @@ com controle rigoroso sobre quais destinos de rede podem ser sondados.
 - [x] `python -m deskguard run printers.status` identifica a impressora com papel travado.
 - [x] `python -m deskguard targets add 10.0.0.5 --port 443` autoriza um destino.
 - [x] Destino não autorizado é recusado com 422 pela API e pela CLI.
-- [x] `python -m pytest -q` → 225 passed, 86% de cobertura.
+- [x] `python -m pytest -q` → 307 passed, 86% de cobertura.
 
 ---
 
