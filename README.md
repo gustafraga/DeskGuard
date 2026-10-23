@@ -1,20 +1,32 @@
 # DeskGuard
 
-Plataforma local de automação de Service Desk e diagnóstico de endpoints Windows.
+**Diagnóstico inteligente e relatórios técnicos padronizados para o Service Desk Windows.**
 
-O DeskGuard reúne diagnóstico de sistema, procedimentos guiados de
-troubleshooting, histórico de execuções, auditoria e geração de relatórios
-técnicos de chamado. Tudo roda **localmente**, no próprio Windows, sem
-servidores externos e sem dependência de rede.
+O DeskGuard é uma plataforma **local e defensiva** para acelerar o primeiro atendimento de TI. Em vez de rodar comandos manualmente e montar o relatório no bloco de notas, o técnico executa um procedimento guiado, obtém evidências reais do endpoint, classifica achados por severidade e gera um **relatório técnico pronto para o chamado** — tudo em poucos cliques ou via linha de comando.
 
-**Estado atual:** incrementos 2, 2.5 e 3 concluídos e funcionais — fundação da
-plataforma, **seis** procedimentos reais de diagnóstico (somente leitura),
-gerador de relatório com visão em 3 níveis (resumo, tabelas técnicas e JSON
-bruto recolhido), histórico, auditoria, interface web e suíte de testes
-automatizados. Desde a versão **0.2.0** a plataforma também roda em **janela
-nativa do Windows** (sem navegador) e é distribuída como **executável único**
-(`DeskGuard.exe`). Ao abrir o executável sem argumentos, ele assume
-automaticamente o comando `desktop`.
+## Valor para o Service Desk
+
+- **Agilidade no atendimento:** Reduz o tempo de triagem ao centralizar os checks mais frequentes (sistema, rede, impressoras, serviços e segurança) em um único painel.
+- **Relatórios padronizados:** Gera relatórios claros com resumo executivo, tabelas técnicas e evidências rastreáveis, prontos para colar no sistema de chamados.
+- **Sem adivinhação:** Coleta **somente leitura** com dados reais do Windows (PowerShell, WMI/CIM), evitando alterações acidentais no equipamento.
+- **Segurança e governança:** Lista de destinos autorizados para testes de rede, sem shell dinâmico, validação estrita de parâmetros e trilha de auditoria.
+- **Funciona onde precisa:** Roda 100% local (sem SaaS), em **janela nativa do Windows** ou via navegador, e pode ser distribuído como **executável único** (`DeskGuard.exe`).
+- **Confiável:** Suíte automatizada com 274 testes garantindo estabilidade entre versões.
+
+**Estado atual:** MVP concluído — **seis** procedimentos reais de diagnóstico (somente leitura), gerador de relatório com visão em 3 níveis (resumo N1, tabelas técnicas N2/N3 e JSON bruto recolhido em bloco retrátil), histórico, auditoria, interface web, janela nativa e suíte de testes automatizados. Desde a versão **0.2.0** a plataforma também roda em **janela nativa do Windows** (sem navegador) e é distribuída como **executável único** (`DeskGuard.exe`). Ao abrir o executável sem argumentos, ele assume automaticamente o comando `desktop`.
+
+---
+
+## Screenshots
+
+> *Adicione capturas de tela aqui para enriquecer o portfólio.* Sugestões: tela inicial com catálogo de procedimentos, execução em andamento, relatório com visão em 3 níveis (resumo + tabelas técnicas), módulo de segurança com achados por severidade e janela nativa do `DeskGuard.exe`.
+
+| Tela | Descrição |
+|---|---|
+| ![Tela Inicial](docs/screenshots/home.png) | Catálogo de procedimentos com status e execução em um clique. |
+| ![Execução](docs/screenshots/execution.png) | Acompanhamento em tempo real das etapas e evidências coletadas. |
+| ![Relatório](docs/screenshots/report.png) | Relatório técnico com resumo N1, tabelas N2/N3 e cópia pronta para o chamado. |
+| ![Auditoria de Segurança](docs/screenshots/security-audit.png) | Módulo `security.audit` com Firewall, UAC, RDP, BitLocker e classificação por severidade. |
 
 ---
 
