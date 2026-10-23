@@ -81,6 +81,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(routes.executions.router, prefix="/api")
     app.include_router(routes.reports.router, prefix="/api")
     app.include_router(routes.audit.router, prefix="/api")
+    app.include_router(routes.remediation.router, prefix="/api")
 
     templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
     if STATIC_DIR.exists():

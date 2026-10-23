@@ -1000,3 +1000,79 @@ export async function renderSettings(root) {
     ]),
   );
 }
+
+
+// --------------------------------------------------------------------------
+// Módulo G - Auto-Remediação
+// --------------------------------------------------------------------------
+
+async function loadRemediationActions() {
+  try {
+    const res = await api.get('/api/remediation/actions');
+    return res.actions || [];
+  } catch (err) {
+    console.error(err);
+    return [];
+  }
+}
+
+function renderRemediationModal(action, onConfirm) {
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  
+  const modal = document.createElement('div');
+  modal.className = 'modal';
+  modal.innerHTML = `
+    <div class="modal-header">
+      <h3>Confirmação de Remediação</h3>
+    </div>
+    <div class="modal-body">
+      <p class="modal-warning">⚠️ Esta ação irá alterar o sistema.</p>
+      <p><strong>Ação:</strong> ${action.title}</p>
+      <p><strong>Descrição:</strong> ${action.description}</p>
+      <p class="modal-risk">Nível de risco: <span class="badge">${action.risk_level}</span></p>
+      <p>Tem certeza que deseja continuar?</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="remed-cancel">Cancelar</button>
+      <button class="btn btn-primary" id="remed-confirm">Confirmar e Executar</button>
+    </div>
+  `;
+  
+  overlay.appendChild(modal);
+  document.body.appendChild(overlay);
+  
+  modal.querySelector('#remed-cancel').onclick = () => document.body.removeChild(overlay);
+  modal.querySelector('#remed-confirm').onclick = async () => {
+    modal.querySelector('#remed-confirm').disabled = true;
+    modal.querySelector('#remed-confirm').textContent = 'Executando...';
+    try {
+      await onConfirm();
+      document.body.removeChild(overlay);
+      showToast('Remediação executada com sucesso', 'ok');
+    } catch (err) {
+      modal.querySelector('#remed-confirm').disabled = false;
+      modal.querySelector('#remed-confirm').textContent = 'Confirmar e Executar';
+      showToast('Erro ao executar remediação: ' + err.message, 'fail');
+    }
+  };
+}
+
+
+async function handleRestartSpooler(executionId) {
+  const actions = await loadRemediationActions();
+  const action = actions.find(a => a.action_id === 'remediate.restart_spooler');
+  if (!action) {
+    showToast('Ação não disponível', 'warn');
+    return;
+  }
+  
+  renderRemediationModal(action, async () => {
+    await api.post('/api/remediation/execute', {
+      action_id: action.action_id,
+      approved: true
+    });
+    // Recarregar após remediação
+    setTimeout(() => window.location.hash = '#/history', 1500);
+  });
+}
