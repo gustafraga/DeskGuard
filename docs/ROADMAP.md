@@ -267,9 +267,31 @@ Somente depois que a coleta estiver madura.
 ## Incremento 7 — Empacotamento e integração
 
 - ✅ Executável único via PyInstaller (`deskguard.exe`).
-- [ ] Instalador para Windows.
+- ✅ Instalador para Windows (Inno Setup) com atalhos na Área de Trabalho e Menu Iniciar.
+- ✅ GitHub Actions para build automático e publicação em Releases.
 - [ ] Exportação do relatório para sistema de chamados (CSV/JSON).
 - [ ] Migrações de esquema com Alembic.
+
+## Fase 2 — Resolução Ativa e Integração
+
+### Módulo G — Auto-Remediação ✅ INICIADO
+- [x] Estrutura de ações com confirmação obrigatória
+- [x] Reiniciar serviço Print Spooler com confirmação na interface
+- [x] API `/api/remediation/actions` e `/api/remediation/execute`
+- [x] Modal de confirmação com aviso de alteração
+- [ ] Reativar perfil do Firewall do Windows
+- [ ] Limpar arquivos temporários quando disco com pouco espaço
+
+### Módulo H — Integração com GLPI
+- [ ] Configuração (URL, token de aplicação)
+- [ ] Criar chamado ou anexar relatório
+- [ ] Armazenamento seguro de credenciais
+
+### Módulo I — Assistente de IA (Opcional e Gratuito)
+- [ ] Integração com modelo local (via freeaiagent)
+- [ ] Resumo em linguagem natural
+- [ ] Sugestões de troubleshooting
+- [ ] Totalmente opcional e local
 
 ---
 

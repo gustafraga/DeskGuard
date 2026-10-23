@@ -13,7 +13,7 @@ O DeskGuard é uma plataforma **local e defensiva** para acelerar o primeiro ate
 - **Funciona onde precisa:** Roda 100% local (sem SaaS), em **janela nativa do Windows** ou via navegador, e pode ser distribuído como **executável único** (`DeskGuard.exe`).
 - **Confiável:** Suíte automatizada com 274 testes garantindo estabilidade entre versões.
 
-**Estado atual:** MVP concluído — **seis** procedimentos reais de diagnóstico (somente leitura), gerador de relatório com visão em 3 níveis (resumo N1, tabelas técnicas N2/N3 e JSON bruto recolhido em bloco retrátil), histórico, auditoria, interface web, janela nativa e suíte de testes automatizados. Desde a versão **0.2.0** a plataforma também roda em **janela nativa do Windows** (sem navegador) e é distribuída como **executável único** (`DeskGuard.exe`). Ao abrir o executável sem argumentos, ele assume automaticamente o comando `desktop`.
+**Estado atual:** MVP Fase 1 concluído + **Fase 2 iniciada** — **seis** procedimentos reais de diagnóstico (somente leitura), gerador de relatório com visão em 3 níveis (resumo N1, tabelas técnicas N2/N3 e JSON bruto recolhido em bloco retrátil), histórico, auditoria, **Módulo G - Auto-Remediação** (reiniciar Print Spooler com confirmação obrigatória), interface web, janela nativa, instalador Inno Setup e GitHub Actions para Releases. Suíte automatizada com **276 testes**. Desde a versão **0.2.0** a plataforma também roda em **janela nativa do Windows** (sem navegador) e é distribuída como **executável único** (`DeskGuard.exe`) ou via instalador. Ao abrir o executável sem argumentos, ele assume automaticamente o comando `desktop`.
 
 ---
 
