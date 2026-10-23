@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="deskguard-csrf" content="{{ csrf_token }}" />
+    <meta name="deskguard-version" content="{{ version }}" />
+    <meta
+      name="description"
+      content="DeskGuard — plataforma local de automação de Service Desk e diagnóstico de endpoints Windows."
+    />
+    <title>DeskGuard — Service Desk</title>
+    <link rel="stylesheet" href="/static/css/styles.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#conteudo">Pular para o conteúdo principal</a>
+
+    <div class="layout">
+      <aside class="sidebar">
+        <div class="brand">
+          <span class="brand-mark" aria-hidden="true">DG</span>
+          <span class="brand-text">
+            <strong>DeskGuard</strong>
+            <small>Service Desk</small>
+          </span>
+        </div>
+
+        <nav class="nav" aria-label="Navegação principal">
+          <ul>
+            <li>
+              <a href="#/dashboard" data-route="dashboard">
+                <span aria-hidden="true">▤</span> Painel
+              </a>
+            </li>
+            <li>
+              <a href="#/catalog" data-route="catalog">
+                <span aria-hidden="true">▦</span> Catálogo
+              </a>
+            </li>
+            <li>
+              <a href="#/history" data-route="history">
+                <span aria-hidden="true">◷</span> Histórico
+              </a>
+            </li>
+            <li>
+              <a href="#/audit" data-route="audit">
+                <span aria-hidden="true">⛨</span> Auditoria
+              </a>
+            </li>
+            <li>
+              <a href="#/settings" data-route="settings">
+                <span aria-hidden="true">⚙</span> Configurações
+              </a>
+            </li>
+          </ul>
+        </nav>
+
+        <div class="sidebar-footer">
+          <p class="sidebar-version">
+            Versão <span id="app-version">{{ version }}</span>
+          </p>
+          <p class="sidebar-note">Execução local · somente leitura</p>
+        </div>
+      </aside>
+
+      <main id="conteudo" class="content" tabindex="-1">
+        <div id="app" class="app-root">
+          <p class="loading">Carregando…</p>
+        </div>
+      </main>
+    </div>
+
+    <div id="toast-container" class="toasts" aria-live="polite" aria-atomic="true"></div>
+
+    <script type="module" src="/static/js/app.js"></script>
+  </body>
+</html>

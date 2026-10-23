@@ -1,0 +1,29 @@
+# Dependências de execução do DeskGuard.
+# Versões verificadas em 22/10/2026 com Python 3.14.7 (Windows 10 Pro 22H2).
+#
+# Instalação:
+#   python -m pip install -r requirements.txt
+#
+# A camada desktop (janela nativa) e opcional e não entra aqui:
+#   python -m pip install -r requirements.txt pywebview
+
+fastapi==0.158.1
+uvicorn==0.54.0
+SQLAlchemy==2.1.6
+Jinja2==3.1.6
+pydantic==2.14.1
+
+# Transitivas (fixadas para reprodutibilidade)
+annotated-types==0.8.0
+anyio==4.15.1
+click==8.5.0
+colorama==0.4.6
+h11==0.16.0
+idna==3.20
+MarkupSafe==3.0.4
+pydantic_core==2.50.1
+Pygments==2.21.0
+sniffio==1.3.1
+starlette==1.9.0
+typing_extensions==4.16.0
+typing-inspection==0.4.4

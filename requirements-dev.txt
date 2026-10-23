@@ -1,0 +1,25 @@
+# Dependências de desenvolvimento, testes e empacotamento do DeskGuard.
+# Instalação:
+#   python -m pip install -r requirements.txt -r requirements-dev.txt
+#
+# pywebview entra para permitir testar a camada desktop nesta máquina.
+#   python -m pip install pywebview
+
+-r requirements.txt
+
+pytest==9.1.1
+pytest-cov==7.1.0
+httpx==0.28.1
+pyinstaller==6.22.3
+pywebview==6.2.1
+
+# Transitivas
+coverage==7.16.2
+httpcore==1.0.9
+iniconfig==2.3.1
+packaging==26.3
+pluggy==1.7.0
+altgraph==0.17.5
+pefile==2024.8.26
+pyinstaller-hooks-contrib==2026.9
+pywin32-ctypes==0.2.3
