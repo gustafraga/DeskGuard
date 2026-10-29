@@ -699,12 +699,19 @@ export async function renderProcedureDetail(root, procedureId) {
   }
 
   async function execute(mode) {
+    if (spec.capability === 'modifying' && mode === 'live') {
+      const confirmed = window.confirm(
+        `⚠️ Atenção: O procedimento "${spec.title}" é MODIFICADOR e altera o estado do sistema.\n\nTem certeza que deseja executar?`
+      );
+      if (!confirmed) return;
+    }
+
     clear(resultsContainer);
     resultsContainer.append(h('p', { class: 'loading', text: 'Executando coleta…' }));
     runButton.disabled = true;
     demoButton.disabled = true;
     try {
-      const accepted = await api.run(spec.id, collectParams(), mode, false);
+      const accepted = await api.run(spec.id, collectParams(), mode, spec.capability === 'modifying');
       const execution = await waitForExecution(accepted.execution_id);
       clear(resultsContainer);
       resultsContainer.append(
