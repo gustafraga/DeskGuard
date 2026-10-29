@@ -127,7 +127,7 @@ if ONE_FILE:
         target_arch=None,
         codesign_identity=None,
         entitlements_file=None,
-        icon=None,
+        icon=str(SPEC_DIR / "deskguard.ico"),
         uac_admin=False,
     )
 else:
@@ -147,7 +147,7 @@ else:
         target_arch=None,
         codesign_identity=None,
         entitlements_file=None,
-        icon=None,
+        icon=str(SPEC_DIR / "deskguard.ico"),
         uac_admin=False,
     )
 

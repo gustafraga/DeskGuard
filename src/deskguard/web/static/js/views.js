@@ -120,35 +120,213 @@ async function waitForExecution(executionId, onUpdate) {
 }
 
 // ------------------------------------------------------------------- painel
+function openKpiModal(title, contentElements) {
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  const modal = document.createElement('div');
+  modal.className = 'modal';
+  
+  const header = document.createElement('div');
+  header.className = 'modal-header';
+  header.innerHTML = `<h3>${title}</h3>`;
+  const closeBtn = document.createElement('button');
+  closeBtn.className = 'btn small ghost';
+  closeBtn.textContent = '✕';
+  closeBtn.onclick = () => document.body.removeChild(overlay);
+  header.appendChild(closeBtn);
+  
+  const body = document.createElement('div');
+  body.className = 'modal-body';
+  contentElements.forEach(el => body.appendChild(el));
+  
+  const footer = document.createElement('div');
+  footer.className = 'modal-footer';
+  const okBtn = document.createElement('button');
+  okBtn.className = 'btn primary small';
+  okBtn.textContent = 'Fechar';
+  okBtn.onclick = () => document.body.removeChild(overlay);
+  footer.appendChild(okBtn);
+  
+  modal.appendChild(header);
+  modal.appendChild(body);
+  modal.appendChild(footer);
+  overlay.appendChild(modal);
+  document.body.appendChild(overlay);
+  
+  overlay.onclick = (e) => {
+    if (e.target === overlay) document.body.removeChild(overlay);
+  };
+}
+
 export async function renderDashboard(root) {
   clear(root);
-  root.append(pageHeader('Painel', 'Indicadores calculados a partir das execuções realmente registradas no banco local.'));
+  root.append(pageHeader('Painel de Controle', 'Monitoramento em tempo real de endpoints Windows e indicadores operacionais.'));
 
   let stats;
+  let recentExecs;
   try {
-    stats = await api.dashboard();
+    [stats, recentExecs] = await Promise.all([
+      api.dashboard(),
+      api.executions({ limit: 50 })
+    ]);
   } catch (error) {
     root.append(emptyState(`Não foi possível carregar os indicadores: ${error.message}`));
     return;
   }
 
   const kpis = h('div', { class: 'kpi-grid' }, [
-    kpi('Execuções registradas', stats.total_executions, 'Histórico completo do banco local'),
-    kpi('Execuções em 24h', stats.executions_24h, 'Atividade recente'),
+    kpi('Execuções registradas', stats.total_executions, 'Histórico completo local', '', async () => {
+      const list = recentExecs.executions || [];
+      const content = list.length ? h('div', { class: 'table-wrap' }, [
+        h('table', {}, [
+          h('thead', {}, h('tr', {}, [h('th', { text: 'Procedimento' }), h('th', { text: 'Data' }), h('th', { text: 'Status' })])),
+          h('tbody', {}, list.map(ex => h('tr', {}, [
+            h('td', {}, [h('a', { href: `#/history/${ex.id}`, text: ex.procedure_title, onclick: () => document.querySelector('.modal-overlay')?.remove() })]),
+            h('td', { text: formatDateTime(ex.started_at) }),
+            h('td', {}, outcomeBadge(ex.outcome))
+          ])))
+        ])
+      ]) : emptyState('Nenhuma execução registrada.');
+      openKpiModal('Todas as Execuções Registradas', [content]);
+    }),
+    kpi('Execuções em 24h', stats.executions_24h, 'Atividade recente', '', async () => {
+      const now = Date.now();
+      const recent24 = (recentExecs.executions || []).filter(ex => now - new Date(ex.started_at).getTime() < 86400000);
+      const content = recent24.length ? h('div', { class: 'table-wrap' }, [
+        h('table', {}, [
+          h('thead', {}, h('tr', {}, [h('th', { text: 'Procedimento' }), h('th', { text: 'Data' }), h('th', { text: 'Resultado' })])),
+          h('tbody', {}, recent24.map(ex => h('tr', {}, [
+            h('td', {}, [h('a', { href: `#/history/${ex.id}`, text: ex.procedure_title, onclick: () => document.querySelector('.modal-overlay')?.remove() })]),
+            h('td', { text: formatDateTime(ex.started_at) }),
+            h('td', {}, outcomeBadge(ex.outcome))
+          ])))
+        ])
+      ]) : emptyState('Nenhuma execução nas últimas 24 horas.');
+      openKpiModal('Execuções nas Últimas 24h', [content]);
+    }),
     kpi(
       'Desvios confirmados',
       stats.confirmed_issues,
-      'Etapas com falha confirmada ou alerta',
+      'Etapas com falha ou alerta',
       stats.confirmed_issues > 0 ? 'fail' : 'ok',
+      async () => {
+        const issues = (recentExecs.executions || []).filter(ex => ex.outcome === 'issues_found' || ex.outcome === 'error');
+        const content = issues.length ? h('div', { class: 'table-wrap' }, [
+          h('table', {}, [
+            h('thead', {}, h('tr', {}, [h('th', { text: 'Procedimento' }), h('th', { text: 'Data' }), h('th', { text: 'Resumo' })])),
+            h('tbody', {}, issues.map(ex => h('tr', {}, [
+              h('td', {}, [h('a', { href: `#/history/${ex.id}`, text: ex.procedure_title, onclick: () => document.querySelector('.modal-overlay')?.remove() })]),
+              h('td', { text: formatDateTime(ex.started_at) }),
+              h('td', { text: ex.summary || 'Desvio identificado' })
+            ])))
+          ])
+        ]) : emptyState('Nenhum desvio confirmado registrado.');
+        openKpiModal('Desvios Confirmados Detalhados', [content]);
+      }
     ),
     kpi(
       'Verificações inconclusivas',
       stats.inconclusive_checks,
-      'Requerem nova coleta com permissão adequada',
+      'Requerem nova coleta',
       stats.inconclusive_checks > 0 ? 'unknown' : 'ok',
+      async () => {
+        const inc = (recentExecs.executions || []).filter(ex => ex.outcome === 'inconclusive');
+        const content = inc.length ? h('div', { class: 'table-wrap' }, [
+          h('table', {}, [
+            h('thead', {}, h('tr', {}, [h('th', { text: 'Procedimento' }), h('th', { text: 'Data' }), h('th', { text: 'Mensagem' })])),
+            h('tbody', {}, inc.map(ex => h('tr', {}, [
+              h('td', {}, [h('a', { href: `#/history/${ex.id}`, text: ex.procedure_title, onclick: () => document.querySelector('.modal-overlay')?.remove() })]),
+              h('td', { text: formatDateTime(ex.started_at) }),
+              h('td', { text: ex.summary || 'Inconclusivo' })
+            ])))
+          ])
+        ]) : emptyState('Nenhuma verificação inconclusiva.');
+        openKpiModal('Verificações Inconclusivas Detalhadas', [content]);
+      }
     ),
   ]);
   root.append(kpis);
+
+  // Seção de Gráficos com Chart.js (Rosca e Linha)
+  const chartGrid = h('div', { class: 'dashboard-grid-charts' }, [
+    h('div', { class: 'chart-card' }, [
+      h('h3', { text: 'Desvios Confirmados por Severidade' }),
+      h('div', { class: 'chart-container' }, [h('canvas', { id: 'severityChart' })])
+    ]),
+    h('div', { class: 'chart-card' }, [
+      h('h3', { text: 'Execuções Recentes (Tendência)' }),
+      h('div', { class: 'chart-container' }, [h('canvas', { id: 'trendChart' })])
+    ])
+  ]);
+  root.append(chartGrid);
+
+  // Inicializar Gráficos Chart.js após o elemento estar no DOM
+  setTimeout(() => {
+    try {
+      const sevCtx = document.getElementById('severityChart')?.getContext('2d');
+      if (sevCtx) {
+        const sevData = stats.by_severity || { info: 0, warn: 0, fail: 0 };
+        new Chart(sevCtx, {
+          type: 'doughnut',
+          data: {
+            labels: Object.keys(sevData),
+            datasets: [{
+              data: Object.values(sevData),
+              backgroundColor: ['#22d3ee', '#fbbf24', '#f87171', '#c084fc'],
+              borderWidth: 0
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { position: 'bottom', labels: { color: '#9ca3af', font: { family: 'Inter', size: 12 } } }
+            }
+          }
+        });
+      }
+
+      const trendCtx = document.getElementById('trendChart')?.getContext('2d');
+      if (trendCtx) {
+        // Agrupar execuções por dia recente
+        const countsByDay = {};
+        (recentExecs.executions || []).forEach(ex => {
+          const day = (ex.started_at || '').split('T')[0];
+          if (day) countsByDay[day] = (countsByDay[day] || 0) + 1;
+        });
+        const days = Object.keys(countsByDay).sort().slice(-7);
+        const counts = days.map(d => countsByDay[d]);
+
+        new Chart(trendCtx, {
+          type: 'line',
+          data: {
+            labels: days.length ? days : ['Hoje'],
+            datasets: [{
+              label: 'Execuções',
+              data: counts.length ? counts : [stats.total_executions || 0],
+              borderColor: '#22d3ee',
+              backgroundColor: 'rgba(34, 211, 238, 0.1)',
+              fill: true,
+              tension: 0.3
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false }
+            },
+            scales: {
+              x: { ticks: { color: '#9ca3af' }, grid: { color: '#1f2937' } },
+              y: { ticks: { color: '#9ca3af' }, grid: { color: '#1f2937' } }
+            }
+          }
+        });
+      }
+    } catch (err) {
+      console.error('Erro ao renderizar gráficos:', err);
+    }
+  }, 50);
 
   // Criar cards de AD com skeleton loader imediato para performance de inicialização
   const accountCardContainer = card('Minha Conta', h('div', { class: 'skeleton', style: 'height: 120px;' }, [h('p', { text: 'Carregando conta...' })]));
@@ -213,19 +391,7 @@ export async function renderDashboard(root) {
     ]),
   );
 
-  let recent;
-  try {
-    recent = await api.executions({ limit: 8 });
-  } catch (error) {
-    root.append(
-      card(
-        'Últimas execuções',
-        emptyState(`Não foi possível carregar as execuções recentes: ${error.message}`),
-      ),
-    );
-    return;
-  }
-  const recentTable = recent.executions.length
+  const recentTable = (recentExecs.executions || []).length
     ? h('div', { class: 'table-wrap' }, [
         h('table', {}, [
           h('caption', { text: 'Últimas execuções' }),
@@ -239,7 +405,7 @@ export async function renderDashboard(root) {
           h(
             'tbody',
             {},
-            recent.executions.map((execution) =>
+            (recentExecs.executions || []).slice(0, 8).map((execution) =>
               h('tr', {}, [
                 h('td', {}, [
                   h('a', { href: `#/history/${execution.id}`, text: execution.procedure_title }),
@@ -258,12 +424,17 @@ export async function renderDashboard(root) {
   root.append(card('Últimas execuções', recentTable));
 }
 
-function kpi(label, value, hint, tone) {
-  return h('div', { class: `kpi${tone ? ` is-${tone}` : ''}` }, [
+function kpi(label, value, hint, tone, onClick) {
+  const el = h('div', { class: `kpi${tone ? ` is-${tone}` : ''}` }, [
     h('div', { class: 'kpi-label', text: label }),
     h('div', { class: 'kpi-value', text: String(value ?? 0) }),
     hint ? h('div', { class: 'kpi-hint', text: hint }) : null,
   ]);
+  if (onClick) {
+    el.style.cursor = 'pointer';
+    el.onclick = onClick;
+  }
+  return el;
 }
 
 function adStatusTone(status) {
