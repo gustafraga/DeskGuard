@@ -127,6 +127,10 @@ def build_parser() -> argparse.ArgumentParser:
     remove = targets_sub.add_parser("remove", help="Revoga a autorização de um destino.")
     remove.add_argument("host", help="Nome de host ou endereço IPv4 do destino.")
 
+    db_parser = sub.add_parser("db", help="Gerencia o banco de dados local.")
+    db_sub = db_parser.add_subparsers(dest="db_command", required=True)
+    db_sub.add_parser("clean", help="Limpa todas as execuções e auditorias do banco de dados.")
+
     return parser
 
 
@@ -448,6 +452,8 @@ def main(argv: list[str] | None = None) -> int:
             return _command_run(args, settings)
         if args.command == "targets":
             return _command_targets(args)
+        if args.command == "db":
+            return _command_db(args, settings)
     except DeskGuardError as exc:
         print(f"Erro: {exc}", file=sys.stderr)
         return 2

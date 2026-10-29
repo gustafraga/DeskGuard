@@ -1,16 +1,16 @@
 /* DeskGuard — Modern Dark Mode Admin Theme */
 
 :root {
-  --bg: #090d16;
-  --surface: #111827;
-  --surface-alt: #1f2937;
-  --border: #374151;
-  --border-strong: #4b5563;
+  --bg: #121212;
+  --surface: #1e1e1e;
+  --surface-alt: #2a2a2a;
+  --border: #333333;
+  --border-strong: #444444;
   --text: #f3f4f6;
-  --text-muted: #9ca3af;
-  --sidebar-bg: #030712;
-  --sidebar-text: #9ca3af;
-  --sidebar-active: #1f2937;
+  --text-muted: #a1a1aa;
+  --sidebar-bg: #0a0a0a;
+  --sidebar-text: #a1a1aa;
+  --sidebar-active: #1e1e1e;
   
   /* Neon Accents */
   --accent: #22d3ee;        /* Ciano Neon */
@@ -26,9 +26,9 @@
   --unknown: #94a3b8;
   --unknown-soft: rgba(148, 163, 184, 0.15);
 
-  --radius: 10px;
-  --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
-  --shadow-lg: 0 20px 35px -10px rgba(34, 211, 238, 0.15);
+  --radius: 12px;
+  --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.6), 0 8px 10px -6px rgba(0, 0, 0, 0.6);
+  --shadow-lg: 0 20px 35px -10px rgba(34, 211, 238, 0.2);
   --font: "Inter", system-ui, -apple-system, sans-serif;
   --mono: "Cascadia Mono", "Consolas", monospace;
 }
