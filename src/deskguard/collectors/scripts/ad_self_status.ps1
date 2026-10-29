@@ -57,9 +57,21 @@ if (-not $account['username']) {
     $account['error'] = 'A variavel de ambiente USERNAME nao esta definida.'
 } else {
     try {
+        # Verificacao extremamente rapida se o modulo ActiveDirectory existe no sistema
         $mod = Get-Module -ListAvailable ActiveDirectory -ErrorAction SilentlyContinue
         if (-not $mod) {
-            throw "Modulo ActiveDirectory (RSAT) nao esta instalado nesta maquina."
+            $account['error'] = 'Modulo ActiveDirectory (RSAT) nao esta instalado nesta maquina.'
+            $data['ad.account'] = $account
+            $trust = [ordered]@{
+                checked = $false
+                trust_ok = $null
+                domain = Get-Text $env:USERDNSDOMAIN
+                error = 'Modulo ActiveDirectory (RSAT) ausente; verificacao de dominio ignorada.'
+            }
+            $data['ad.domain_trust'] = $trust
+            $result = [ordered]@{ ok = $true; data = $data }
+            $result | ConvertTo-Json -Depth 6 -Compress
+            exit 0
         }
         Import-Module ActiveDirectory -ErrorAction Stop
         $adUser = Get-ADUser -Identity $env:USERNAME -Properties Enabled, LockedOut, PasswordExpired, AccountExpirationDate, LastLogonDate -ErrorAction Stop

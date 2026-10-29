@@ -55,6 +55,13 @@ async function router() {
   const target = NAV_MAP[section] || section;
   markActiveNav(target);
 
+  // Garantir limpeza total do container e estado anterior ao trocar de aba
+  root.replaceChildren(
+    h('div', { class: 'card skeleton', style: 'padding: 40px; text-align: center;' }, [
+      h('p', { text: 'Carregando seção...' })
+    ])
+  );
+
   try {
     if (section === 'dashboard') {
       await renderDashboard(root);

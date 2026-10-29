@@ -150,20 +150,29 @@ export async function renderDashboard(root) {
   ]);
   root.append(kpis);
 
-  let selfStatus = null;
-  let selfStatusError = null;
-  try {
-    selfStatus = await api.adSelfStatus();
-  } catch (error) {
-    selfStatusError = error.message;
-  }
+  // Criar cards de AD com skeleton loader imediato para performance de inicialização
+  const accountCardContainer = card('Minha Conta', h('div', { class: 'skeleton', style: 'height: 120px;' }, [h('p', { text: 'Carregando conta...' })]));
+  const trustCardContainer = card('Confiança do Domínio', h('div', { class: 'skeleton', style: 'height: 120px;' }, [h('p', { text: 'Carregando confiança...' })]));
 
   root.append(
     h('div', { class: 'detail-grid' }, [
-      card('Minha Conta', renderSelfAccount(selfStatus, selfStatusError)),
-      card('Confiança do Domínio', renderDomainTrust(selfStatus, selfStatusError)),
+      accountCardContainer,
+      trustCardContainer,
     ]),
   );
+
+  // Carregar AD em segundo plano (assíncrono) para o painel abrir instantaneamente
+  (async () => {
+    let selfStatus = null;
+    let selfStatusError = null;
+    try {
+      selfStatus = await api.adSelfStatus();
+    } catch (error) {
+      selfStatusError = error.message;
+    }
+    accountCardContainer.replaceWith(card('Minha Conta', renderSelfAccount(selfStatus, selfStatusError)));
+    trustCardContainer.replaceWith(card('Confiança do Domínio', renderDomainTrust(selfStatus, selfStatusError)));
+  })();
 
   const bySeverity = Object.entries(stats.by_severity || {});
   const severityRows = bySeverity.length
