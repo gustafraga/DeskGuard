@@ -349,6 +349,25 @@ def test_rota_do_dashboard_expoe_conta_e_confianca_do_dominio(
     assert body["domain_trust"]["ok"] is False
 
 
+def test_rota_do_dashboard_nao_falha_quando_a_coleta_ad_quebra(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from deskguard.api.routes import system
+
+    def _explode(**_: object) -> dict:
+        raise RuntimeError("falha simulada no RSAT")
+
+    monkeypatch.setattr(system, "collect_self_status_summary", _explode)
+
+    response = client.get("/api/ad/self-status")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["account"]["status"] == "inconclusive"
+    assert body["domain_trust"]["status"] == "inconclusive"
+    assert "RuntimeError" in body["account"]["error"]
+
+
 def test_dashboard_renderiza_cards_minha_conta_e_confianca(
     client: TestClient,
 ) -> None:
@@ -358,6 +377,16 @@ def test_dashboard_renderiza_cards_minha_conta_e_confianca(
     assert "Minha Conta" in script
     assert "Confiança do Domínio" in script
     assert "adSelfStatus" in script
+
+
+def test_cliente_js_limita_tempo_das_chamadas_do_dashboard(
+    client: TestClient,
+) -> None:
+    response = client.get("/static/js/api.js")
+    assert response.status_code == 200
+    client_js = response.text
+    assert "AbortController" in client_js
+    assert "adSelfStatus: () => request('/api/ad/self-status', { timeoutMs: 5000 })" in client_js
 
 
 def test_execucao_de_ad_self_status_em_modo_demonstracao(

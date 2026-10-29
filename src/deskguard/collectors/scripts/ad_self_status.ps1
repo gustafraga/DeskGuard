@@ -57,6 +57,10 @@ if (-not $account['username']) {
     $account['error'] = 'A variavel de ambiente USERNAME nao esta definida.'
 } else {
     try {
+        $mod = Get-Module -ListAvailable ActiveDirectory -ErrorAction SilentlyContinue
+        if (-not $mod) {
+            throw "Modulo ActiveDirectory (RSAT) nao esta instalado nesta maquina."
+        }
         Import-Module ActiveDirectory -ErrorAction Stop
         $adUser = Get-ADUser -Identity $env:USERNAME -Properties Enabled, LockedOut, PasswordExpired, AccountExpirationDate, LastLogonDate -ErrorAction Stop
         $account['available'] = $true

@@ -14,7 +14,10 @@ from deskguard.collectors.python_stdlib import is_admin
 from deskguard.config import Settings
 from deskguard.desktop import desktop_availability
 from deskguard.domain.enums import AuditAction
-from deskguard.procedures.ad_self_status import collect_self_status_summary
+from deskguard.procedures.ad_self_status import (
+    collect_self_status_summary,
+    inconclusive_self_status_summary,
+)
 from deskguard.security.allowlist import allowlist_path_for, load_allowlist
 from deskguard.storage import repository
 from deskguard.storage.database import Database
@@ -56,8 +59,15 @@ def ad_self_status(settings: Settings = Depends(get_settings)) -> dict:
 
     A consulta usa o contexto de segurança do próprio técnico: nenhuma
     credencial adicional é recebida pela API nem repassada ao PowerShell.
+    O painel tem prioridade sobre a coleta completa: o tempo é curto e
+    qualquer falha vira um resultado inconclusivo, nunca um erro 500.
     """
-    return collect_self_status_summary(timeout_s=settings.request_timeout_s)
+    try:
+        return collect_self_status_summary(timeout_s=settings.request_timeout_s)
+    except Exception as exc:  # noqa: BLE001 - o Dashboard não pode travar
+        return inconclusive_self_status_summary(
+            detail=f"{type(exc).__name__}: {exc}"
+        )
 
 
 @router.get("/settings")

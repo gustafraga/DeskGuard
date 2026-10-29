@@ -36,6 +36,11 @@ from deskguard.procedures.base import Procedure
 
 _SCRIPT_NAME = "ad_self_status.ps1"
 
+DASHBOARD_TIMEOUT_S = 3.0
+_DASHBOARD_ERROR_MESSAGE = (
+    "Não foi possível consultar o Active Directory; resultado inconclusivo."
+)
+
 
 @register
 class AdSelfStatusProcedure(Procedure):
@@ -187,20 +192,55 @@ class AdSelfStatusProcedure(Procedure):
         )
 
 
-def collect_self_status_summary(timeout_s: float = 20.0) -> dict[str, Any]:
+def inconclusive_self_status_summary(
+    message: str = _DASHBOARD_ERROR_MESSAGE, detail: str = ""
+) -> dict[str, Any]:
+    """Payload de fallback para o Dashboard quando a coleta não é possível."""
+    evidence = {"error": detail[:400]} if detail else {}
+    return {
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "mode": str(ExecutionMode.LIVE),
+        "username": "",
+        "account": {
+            "status": "inconclusive",
+            "severity": "info",
+            "message": message,
+            **evidence,
+        },
+        "domain_trust": {
+            "status": "inconclusive",
+            "severity": "info",
+            "message": message,
+            **evidence,
+        },
+    }
+
+
+def collect_self_status_summary(timeout_s: float = DASHBOARD_TIMEOUT_S) -> dict[str, Any]:
     """Executa o diagnóstico e devolve um payload pronto para o Dashboard.
 
     A rota HTTP usa esta função para montar os cards "Minha Conta" e
     "Confiança do Domínio". Ela não registra execução no histórico: é uma
     leitura de contexto para o painel, não uma execução do catálogo.
+
+    O tempo é limitado a :data:`DASHBOARD_TIMEOUT_S` para que uma máquina sem
+    RSAT ou sem contato com o controlador de domínio não deixe o painel
+    travado. Qualquer falha inesperada vira um payload inconclusivo.
     """
-    procedure = AdSelfStatusProcedure()
-    ctx = ProbeContext(
-        execution_id="dashboard-ad-self-status",
-        mode=ExecutionMode.LIVE,
-        timeout_s=timeout_s,
-    )
-    checks = procedure.run(ctx)
+    try:
+        effective_timeout = max(0.5, min(float(timeout_s), DASHBOARD_TIMEOUT_S))
+        procedure = AdSelfStatusProcedure()
+        ctx = ProbeContext(
+            execution_id="dashboard-ad-self-status",
+            mode=ExecutionMode.LIVE,
+            timeout_s=effective_timeout,
+        )
+        checks = procedure.run(ctx)
+    except Exception as exc:  # noqa: BLE001 - o painel nunca deve travar
+        return inconclusive_self_status_summary(
+            detail=f"{type(exc).__name__}: {exc}"
+        )
+
     by_id = {check.check_id: check for check in checks}
     account = by_id.get(ACCOUNT_CHECK_ID)
     trust = by_id.get(TRUST_CHECK_ID)

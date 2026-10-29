@@ -325,6 +325,39 @@ def test_resumo_do_dashboard_reflete_confianca_quebrada() -> None:
     assert "administrador" in resumo["domain_trust"]["message"].lower()
 
 
+def test_resumo_do_dashboard_limita_o_tempo_de_coleta(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    tempos: list[float] = []
+
+    class _ProcedureLenta:
+        def run(self, ctx):  # noqa: ANN001
+            tempos.append(ctx.timeout_s)
+            return []
+
+    monkeypatch.setattr(ad_self_status, "AdSelfStatusProcedure", _ProcedureLenta)
+
+    ad_self_status.collect_self_status_summary(timeout_s=25.0)
+
+    assert tempos == [ad_self_status.DASHBOARD_TIMEOUT_S]
+
+
+def test_resumo_do_dashboard_captura_falha_inesperada(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    class _ProcedureQuebrada:
+        def run(self, ctx):  # noqa: ANN001
+            raise RuntimeError("falha inesperada")
+
+    monkeypatch.setattr(ad_self_status, "AdSelfStatusProcedure", _ProcedureQuebrada)
+
+    resumo = ad_self_status.collect_self_status_summary(timeout_s=25.0)
+
+    assert resumo["account"]["status"] == "inconclusive"
+    assert resumo["domain_trust"]["status"] == "inconclusive"
+    assert "RuntimeError" in resumo["account"]["error"]
+
+
 def test_secoes_ausentes_nao_viram_falha() -> None:
     _FakeRunner.payload = {}
 

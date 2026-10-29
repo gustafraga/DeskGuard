@@ -19,6 +19,7 @@ function buildQuery(params) {
 async function request(path, options = {}) {
   const method = (options.method || 'GET').toUpperCase();
   const headers = { Accept: 'application/json', ...(options.headers || {}) };
+  const timeoutMs = Number.isFinite(options.timeoutMs) ? options.timeoutMs : 10000;
   let body = options.body;
 
   if (method !== 'GET' && method !== 'HEAD') {
@@ -29,7 +30,29 @@ async function request(path, options = {}) {
     }
   }
 
-  const response = await fetch(path, { ...options, method, headers, body });
+  const controller = new AbortController();
+  const timer = window.setTimeout(() => controller.abort(), timeoutMs);
+  let response;
+  try {
+    response = await fetch(path, {
+      ...options,
+      method,
+      headers,
+      body,
+      signal: controller.signal,
+    });
+  } catch (error) {
+    if (controller.signal.aborted) {
+      throw new Error(
+        `A API local não respondeu em ${Math.round(timeoutMs / 1000)}s. ` +
+          'Verifique se o DeskGuard continua em execução e tente novamente.',
+      );
+    }
+    throw error;
+  } finally {
+    window.clearTimeout(timer);
+  }
+
   const contentType = response.headers.get('content-type') || '';
   let payload = null;
   if (contentType.includes('application/json')) {
@@ -50,12 +73,12 @@ async function request(path, options = {}) {
 
 export const api = {
   health: () => request('/api/health'),
-  dashboard: () => request('/api/dashboard'),
-  adSelfStatus: () => request('/api/ad/self-status'),
+  dashboard: () => request('/api/dashboard', { timeoutMs: 5000 }),
+  adSelfStatus: () => request('/api/ad/self-status', { timeoutMs: 5000 }),
   settings: () => request('/api/settings'),
   procedures: () => request('/api/procedures'),
   procedure: (id) => request(`/api/procedures/${encodeURIComponent(id)}`),
-  executions: (params) => request(`/api/executions${buildQuery(params)}`),
+  executions: (params) => request(`/api/executions${buildQuery(params)}`, { timeoutMs: 5000 }),
   execution: (id) => request(`/api/executions/${encodeURIComponent(id)}`),
   run: (procedureId, params, mode, approved) =>
     request('/api/executions', {
