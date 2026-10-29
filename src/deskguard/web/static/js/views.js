@@ -20,7 +20,17 @@ import {
   toast,
 } from './ui.js';
 
-// ---------------------------------------------------------------- utilidades
+function formatCustomDateTime(isoStr) {
+  if (!isoStr) return '—';
+  try {
+    const d = new Date(isoStr);
+    if (isNaN(d.getTime())) return isoStr;
+    const pad = (n) => String(n).padStart(2, '0');
+    return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  } catch (e) {
+    return isoStr;
+  }
+}
 function procedureBadges(spec) {
   const badges = [];
   badges.push(
@@ -230,13 +240,13 @@ export async function renderDashboard(root) {
       'Requerem nova coleta',
       stats.inconclusive_checks > 0 ? 'unknown' : 'ok',
       async () => {
-        const inc = (recentExecs.executions || []).filter(ex => ex.outcome === 'inconclusive');
+        const inc = (recentExecs.executions || []).filter(ex => ex.outcome === 'inconclusive' || ex.outcome === 'error');
         const content = inc.length ? h('div', { class: 'table-wrap' }, [
           h('table', {}, [
             h('thead', {}, h('tr', {}, [h('th', { text: 'Procedimento' }), h('th', { text: 'Data' }), h('th', { text: 'Mensagem' })])),
             h('tbody', {}, inc.map(ex => h('tr', {}, [
               h('td', {}, [h('a', { href: `#/history/${ex.id}`, text: ex.procedure_title, onclick: () => document.querySelector('.modal-overlay')?.remove() })]),
-              h('td', { text: formatDateTime(ex.started_at) }),
+              h('td', { text: formatCustomDateTime(ex.started_at) }),
               h('td', { text: ex.summary || 'Inconclusivo' })
             ])))
           ])
@@ -480,7 +490,7 @@ function renderSelfAccount(selfStatus, error) {
     ['Bloqueio', locked],
     ['Senha', password],
     ['Expiração da conta', expiration],
-    ['Último logon', account.last_logon_date || '—'],
+    ['Último logon', formatCustomDateTime(account.last_logon_date) || '—'],
     ['Mensagem', account.message || '—'],
   ]);
 }
